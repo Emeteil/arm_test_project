@@ -40,10 +40,18 @@ add_subdirectory(third_party)
 add_library(armp_core STATIC
     src/core/Platform.cpp
     src/core/algo/SignalEnergy.cpp
+    src/core/algo/SignalEnergyScalar.cpp
     src/core/bench/Benchmark.cpp
 )
 target_include_directories(armp_core PUBLIC ${CMAKE_SOURCE_DIR}/include)
 target_compile_features(armp_core PUBLIC cxx_std_17)
+
+if(NOT MSVC)
+    set_source_files_properties(
+        src/core/algo/SignalEnergyScalar.cpp
+        PROPERTIES COMPILE_OPTIONS "-fno-tree-vectorize"
+    )
+endif()
 
 add_library(armp_cli STATIC src/cli/CliApp.cpp)
 target_include_directories(armp_cli PUBLIC ${CMAKE_SOURCE_DIR}/include)

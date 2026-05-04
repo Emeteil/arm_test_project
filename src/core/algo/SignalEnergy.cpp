@@ -4,20 +4,8 @@
 #if ARMP_HAS_NEON
     #include <arm_neon.h>
 #endif
-
 namespace ArmProject::Algo
 {
-    std::int64_t SignalEnergyScalar(const std::int32_t* data, std::size_t n) noexcept
-    {
-        std::int64_t sum = 0;
-        for (std::size_t i = 0; i < n; ++i)
-        {
-            const std::int32_t v = data[i];
-            const std::int32_t s = v >> 31;
-            sum += static_cast<std::int64_t>((v ^ s) - s);
-        }
-        return sum;
-    }
 
 #if ARMP_HAS_NEON
 
