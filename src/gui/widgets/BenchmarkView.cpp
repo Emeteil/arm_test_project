@@ -4,6 +4,7 @@
 #include "core/Platform.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <cstdio>
 #include <imgui.h>
 #include <thread>

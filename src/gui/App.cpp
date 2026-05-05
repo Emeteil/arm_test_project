@@ -1,6 +1,7 @@
 #include "gui/App.hpp"
 #include "gui/Theme.hpp"
 #include "gui/widgets/BenchmarkView.hpp"
+#include "gui/widgets/ChartView.hpp"
 #include "gui/widgets/DemoView.hpp"
 #include "gui/widgets/ParticleField.hpp"
 #include "core/Config.hpp"
@@ -155,6 +156,7 @@ namespace ArmProject::Gui
             ImGui_ImplOpenGL3_Init(GlslFor(useGLES));
 
             BenchmarkView bench;
+            ChartView chart;
             DemoView demo;
             NodeField nodes;
             float lastTime = static_cast<float>(glfwGetTime());
@@ -195,17 +197,17 @@ namespace ArmProject::Gui
 
                 if (ImGui::BeginTabBar("##main"))
                 {
-                    if (ImGui::BeginTabItem("Демо"))
-                    {
-                        ImGui::BeginChild("demo_pane", ImVec2(0, 0), true);
-                        demo.Render(dt);
-                        ImGui::EndChild();
-                        ImGui::EndTabItem();
-                    }
                     if (ImGui::BeginTabItem("Бенчмарк"))
                     {
                         ImGui::BeginChild("bench_pane", ImVec2(0, 0), true);
                         bench.Render(dt);
+                        ImGui::EndChild();
+                        ImGui::EndTabItem();
+                    }
+                    if (ImGui::BeginTabItem("График"))
+                    {
+                        ImGui::BeginChild("chart_pane", ImVec2(0, 0), true);
+                        chart.Render(dt);
                         ImGui::EndChild();
                         ImGui::EndTabItem();
                     }

@@ -68,6 +68,7 @@ if(ARMP_BUILD_GUI AND ARMP_GUI_AVAILABLE)
         src/gui/Theme.cpp
         src/gui/widgets/ParticleField.cpp
         src/gui/widgets/BenchmarkView.cpp
+        src/gui/widgets/ChartView.cpp
         src/gui/widgets/DemoView.cpp
     )
     target_include_directories(armp_gui PUBLIC ${CMAKE_SOURCE_DIR}/include)
