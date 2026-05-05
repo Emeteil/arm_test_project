@@ -91,49 +91,65 @@ namespace ArmProject::Gui
 
         double maxMs = 0.0;
         for (const auto& suite : _suites)
-            for (const auto& s : suite.samples)
-                if (s.meanMs > maxMs) maxMs = s.meanMs;
+            if (suite.n >= 65536)
+                for (const auto& s : suite.samples)
+                    if (s.meanMs > maxMs) maxMs = s.meanMs;
         if (maxMs <= 0.0) maxMs = 1.0;
 
-        const int gridH = 6;
-        for (int g = 0; g <= gridH; ++g)
+        double yStep = 0.5;
+        if (maxMs > 8.0)  yStep = 2.0;
+        else if (maxMs > 4.0) yStep = 1.0;
         {
-            float fy  = tl.y + H * (1.0f - (float)g / (float)gridH);
-            bool  maj = (g == 0 || g == gridH);
-            dl->AddLine(ImVec2(tl.x, fy), ImVec2(br.x, fy),
-                        maj ? IM_COL32(80, 85, 115, 180) : IM_COL32(40, 44, 66, 130),
-                        maj ? 1.2f : 0.8f);
-            double val = maxMs * g / gridH;
-            char   lbl[32];
-            if (val < 0.01)
-                std::snprintf(lbl, sizeof(lbl), "%.4f", val);
-            else if (val < 1.0)
-                std::snprintf(lbl, sizeof(lbl), "%.3f", val);
-            else
-                std::snprintf(lbl, sizeof(lbl), "%.2f", val);
-            ImVec2 ts = ImGui::CalcTextSize(lbl);
-            dl->AddText(ImVec2(tl.x - ts.x - 6, fy - 7),
-                        IM_COL32(130, 136, 160, 200), lbl);
+            double yTick = 0.0;
+            while (yTick <= maxMs + 1e-9)
+            {
+                float fy = tl.y + H * (1.0f - (float)(yTick / maxMs));
+                if (fy >= tl.y - 1 && fy <= br.y + 1)
+                {
+                    bool maj = (yTick < 1e-9 || std::fmod(yTick, (yStep * 2)) < 1e-9);
+                    dl->AddLine(ImVec2(tl.x, fy), ImVec2(br.x, fy),
+                                maj ? IM_COL32(80, 85, 115, 160) : IM_COL32(38, 42, 62, 110),
+                                maj ? 1.1f : 0.7f);
+                    char lbl[32];
+                    if (yTick < 1e-9)
+                        std::snprintf(lbl, sizeof(lbl), "0");
+                    else if (yStep < 1.0)
+                        std::snprintf(lbl, sizeof(lbl), "%.1f ms", yTick);
+                    else
+                        std::snprintf(lbl, sizeof(lbl), "%.0f ms", yTick);
+                    ImVec2 ts = ImGui::CalcTextSize(lbl);
+                    dl->AddText(ImVec2(tl.x - ts.x - 6, fy - 7),
+                                IM_COL32(130, 136, 160, 200), lbl);
+                }
+                yTick += yStep;
+            }
         }
 
         const std::size_t N = _suites.size();
 
-        const int xTicks = 8;
-        for (int g = 0; g <= xTicks; ++g)
+        const double logXMin   = std::log10(65536.0);
+        const double logXMax   = std::log10((double)_suites.back().n);
+        const double logXRange = logXMax - logXMin;
+
+        auto logFx = [&](double sz) -> float {
+            double t = (std::log10(sz) - logXMin) / logXRange;
+            return tl.x + (float)t * W;
+        };
+
+        const double xTickValues[] = {
+            80000, 100000, 200000, 500000, 1000000, 2000000, 4000000
+        };
+        for (double sz : xTickValues)
         {
-            float fx    = tl.x + (float)g / (float)xTicks * W;
-            std::size_t idx = static_cast<std::size_t>((double)g / (double)xTicks * (double)(N - 1) + 0.5);
-            if (idx >= N) idx = N - 1;
+            float fx = logFx(sz);
+            if (fx < tl.x - 1 || fx > br.x + 1) continue;
             dl->AddLine(ImVec2(fx, tl.y), ImVec2(fx, br.y),
-                        IM_COL32(40, 44, 66, 100), 0.7f);
+                        IM_COL32(40, 44, 66, 110), 0.7f);
             char lbl[32];
-            std::size_t sz = _suites[idx].n;
-            if (sz >= 1048576)
-                std::snprintf(lbl, sizeof(lbl), "%.1fM", (double)sz / 1048576.0);
-            else if (sz >= 1024)
-                std::snprintf(lbl, sizeof(lbl), "%zuK", sz / 1024);
+            if (sz >= 1e6)
+                std::snprintf(lbl, sizeof(lbl), "%.0fM", sz / 1e6);
             else
-                std::snprintf(lbl, sizeof(lbl), "%zu", sz);
+                std::snprintf(lbl, sizeof(lbl), "%.0fK", sz / 1000.0);
             ImVec2 ts = ImGui::CalcTextSize(lbl);
             dl->AddText(ImVec2(fx - ts.x * 0.5f, br.y + 7),
                         IM_COL32(140, 146, 170, 210), lbl);
@@ -158,7 +174,8 @@ namespace ArmProject::Gui
             pts.reserve(N);
             for (std::size_t i = 0; i < N; ++i)
             {
-                float fx = tl.x + (float)i / (float)(N - 1) * W;
+                if (_suites[i].n < 65536) continue;
+                float fx = logFx(_suites[i].n);
                 float fy = tl.y + H * (1.0f - (float)(_suites[i].samples[a].meanMs / maxMs));
                 fy = std::max(tl.y, std::min(br.y, fy));
                 pts.push_back(ImVec2(fx, fy));
