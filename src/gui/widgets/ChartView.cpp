@@ -11,8 +11,8 @@ namespace ArmProject::Gui
     static std::vector<std::size_t> BuildSizes()
     {
         std::vector<std::size_t> sizes;
-        const double lo = std::log2(512.0);
-        const double hi = std::log2(4194304.0);
+        const double lo = std::log2(1000.0);
+        const double hi = std::log2(10000000.0);
         const int    n  = 80;
         for (int i = 0; i < n; ++i)
         {
@@ -91,7 +91,7 @@ namespace ArmProject::Gui
 
         double maxMs = 0.0;
         for (const auto& suite : _suites)
-            if (suite.n >= 65536)
+            if (suite.n >= 1000)
                 for (const auto& s : suite.samples)
                     if (s.meanMs > maxMs) maxMs = s.meanMs;
         if (maxMs <= 0.0) maxMs = 1.0;
@@ -127,7 +127,7 @@ namespace ArmProject::Gui
 
         const std::size_t N = _suites.size();
 
-        const double logXMin   = std::log10(65536.0);
+        const double logXMin   = std::log10(1000.0);
         const double logXMax   = std::log10((double)_suites.back().n);
         const double logXRange = logXMax - logXMin;
 
@@ -137,7 +137,7 @@ namespace ArmProject::Gui
         };
 
         const double xTickValues[] = {
-            80000, 100000, 200000, 500000, 1000000, 2000000, 4000000
+            1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9, 1e10, 1e11, 1e12, 1e13, 1e14, 1e15
         };
         for (double sz : xTickValues)
         {
@@ -148,8 +148,10 @@ namespace ArmProject::Gui
             char lbl[32];
             if (sz >= 1e6)
                 std::snprintf(lbl, sizeof(lbl), "%.0fM", sz / 1e6);
+            else if (sz >= 1e3)
+                std::snprintf(lbl, sizeof(lbl), "%.0fK", sz / 1e3);
             else
-                std::snprintf(lbl, sizeof(lbl), "%.0fK", sz / 1000.0);
+                std::snprintf(lbl, sizeof(lbl), "%.0f", sz);
             ImVec2 ts = ImGui::CalcTextSize(lbl);
             dl->AddText(ImVec2(fx - ts.x * 0.5f, br.y + 7),
                         IM_COL32(140, 146, 170, 210), lbl);
@@ -174,7 +176,7 @@ namespace ArmProject::Gui
             pts.reserve(N);
             for (std::size_t i = 0; i < N; ++i)
             {
-                if (_suites[i].n < 65536) continue;
+                if (_suites[i].n < 1000) continue;
                 float fx = logFx(_suites[i].n);
                 float fy = tl.y + H * (1.0f - (float)(_suites[i].samples[a].meanMs / maxMs));
                 fy = std::max(tl.y, std::min(br.y, fy));
